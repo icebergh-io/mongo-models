@@ -77,7 +77,7 @@ class MongoModels {
         const db = dbFromArgs(args);
         const collection = db.collection(this.collectionName);
 
-        return collection.count.apply(collection, args);
+        return collection.estimatedDocumentCount.apply(collection, args);
     }
 
 

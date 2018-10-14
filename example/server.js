@@ -43,7 +43,7 @@ app.get('/customers', async (req, res) => {
     let customers;
 
     try {
-        customers = await Customer.find(filter);
+        customers = await Customer.pagedFind(filter);
     }
     catch (err) {
         res.status(500).json({ error: 'something blew up' });
