@@ -2,11 +2,6 @@
 
 JavaScript class interfaces to MongoDB collections.
 
-[![Build Status](https://img.shields.io/travis/jedireza/mongo-models.svg)](https://travis-ci.org/jedireza/mongo-models)
-[![Dependency Status](https://img.shields.io/david/jedireza/mongo-models.svg)](https://david-dm.org/jedireza/mongo-models)
-[![devDependency Status](https://img.shields.io/david/dev/jedireza/mongo-models.svg)](https://david-dm.org/jedireza/mongo-models#info=devDependencies)
-[![peerDependency Status](https://img.shields.io/david/peer/jedireza/mongo-models.svg)](https://david-dm.org/jedireza/mongo-models#info=peerDependencies)
-
 [MongoDB](https://github.com/mongodb/node-mongodb-native)'s native driver for
 Node.js is pretty good. We just want a little sugar on top.
 
@@ -26,16 +21,16 @@ data schema.
 ## API reference
 
 See the current [v2.x API
-reference](https://github.com/jedireza/mongo-models/blob/master/API.md).
+reference](https://github.com/icebergh-io/mongo-models/blob/master/API.md).
 
 See the old [v1.x API
-reference](https://github.com/jedireza/mongo-models/blob/996c21e0e18c4cf70e665d319c7cf5eaa9cff846/API.md).
+reference](https://github.com/icebergh-io/mongo-models/blob/996c21e0e18c4cf70e665d319c7cf5eaa9cff846/API.md).
 
 
 ## Install
 
 ```bash
-$ npm install mongo-models
+$ npm install icebergh-mongo-models
 ```
 
 
@@ -168,7 +163,7 @@ $ npm install
 
 The example is a simple Express API that uses the Customer model we created
 above. [View the
-code.](https://github.com/jedireza/mongo-models/tree/master/example)
+code.](https://github.com/icebergh-io/mongo-models/tree/master/example)
 
 ```bash
 $ npm run example
