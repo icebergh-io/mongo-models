@@ -1,6 +1,7 @@
 'use strict';
-const Joi = require('joi');
-const Lab = require('lab');
+
+const Joi = require('@hapi/joi');
+const Lab = require('@hapi/lab');
 const MongoModels = require('../index');
 const Mongodb = require('mongodb');
 
@@ -8,7 +9,7 @@ const Mongodb = require('mongodb');
 const lab = exports.lab = Lab.script();
 const config = {
     connection: {
-        uri: 'mongodb://localhost:27017',
+        uri: process.env.MONGODB_URI || 'mongodb://localhost:27017',
         db: 'mongo-models-test'
     },
     options: {}
@@ -30,7 +31,7 @@ lab.experiment('Connections', () => {
     });
 
 
-    lab.test('it throws when the db connection fails', async () => {
+    lab.test('it throws when the db connection fails', { timeout: 5000 }, async () => {
 
         const connection = {
             uri: 'mongodb://poison',
@@ -76,7 +77,7 @@ lab.experiment('Connections', () => {
         lab.expect(db).to.be.an.instanceof(Mongodb.Db);
         lab.expect(db.serverConfig.isConnected()).to.equal(true);
 
-        class DummyModel extends MongoModels {};
+        class DummyModel extends MongoModels {}
 
         DummyModel.collectionName = 'dummies';
 
@@ -96,7 +97,7 @@ lab.experiment('Connections', () => {
 
     lab.test('it throws when trying to use `with` and the named db misses', () => {
 
-        class DummyModel extends MongoModels {};
+        class DummyModel extends MongoModels {}
 
         lab.expect(DummyModel.with.bind(DummyModel, 'poison')).to.throw();
     });
@@ -107,7 +108,7 @@ lab.experiment('Instance construction', () => {
 
     lab.test('it constructs an instance using the schema', () => {
 
-        class DummyModel extends MongoModels {};
+        class DummyModel extends MongoModels {}
 
         DummyModel.schema = Joi.object().keys({
             name: Joi.string().required(),
@@ -152,7 +153,7 @@ lab.experiment('Instance construction', () => {
 
     lab.test('it throws if schema validation fails when creating an instance using the schema', () => {
 
-        class DummyModel extends MongoModels {};
+        class DummyModel extends MongoModels {}
 
         DummyModel.schema = Joi.object().keys({
             name: Joi.string().required()
@@ -178,7 +179,7 @@ lab.experiment('Validation', () => {
 
     lab.test('it returns the Joi validation results of a SubClass', () => {
 
-        class DummyModel extends MongoModels {};
+        class DummyModel extends MongoModels {}
 
         DummyModel.schema = Joi.object().keys({
             name: Joi.string().required()
@@ -190,7 +191,7 @@ lab.experiment('Validation', () => {
 
     lab.test('it returns the Joi validation results of a SubClass instance', () => {
 
-        class DummyModel extends MongoModels {};
+        class DummyModel extends MongoModels {}
 
         DummyModel.schema = Joi.object().keys({
             name: Joi.string().required()
@@ -207,14 +208,14 @@ lab.experiment('Result factory', () => {
 
     let DummyModel;
 
-
     lab.before(() => {
 
         DummyModel = class extends MongoModels {};
 
         DummyModel.schema = Joi.object().keys({
             _id: Joi.string(),
-            name: Joi.string().required()
+            name: Joi.string().required(),
+            value: Joi.object()
         });
     });
 
@@ -250,7 +251,7 @@ lab.experiment('Result factory', () => {
     });
 
 
-    lab.test('it returns a instance for a `findOpResult` object', () => {
+    lab.test('it returns an instance for a `findOpResult` object', () => {
 
         const input = {
             value: {
@@ -273,6 +274,21 @@ lab.experiment('Result factory', () => {
         const result = DummyModel.resultFactory(input);
 
         lab.expect(result).to.not.exist();
+    });
+
+
+    lab.test('it returns an instance from an object that looks like a `findOpResult` (has a `value` field), but has an `_id` field', () => {
+
+        const input = {
+            _id: 'ren',
+            name: 'Ren',
+            value: {
+                foo: 'bar'
+            }
+        };
+        const result = DummyModel.resultFactory(input);
+
+        lab.expect(result).to.be.an.instanceOf(DummyModel);
     });
 
 
@@ -348,6 +364,21 @@ lab.experiment('Helpers', () => {
     });
 
 
+    lab.test('it passes a fields document through', () => {
+
+        const fields = MongoModels.fieldsAdapter({
+            one: true,
+            two: false,
+            three: true
+        });
+
+        lab.expect(fields).to.be.an.object();
+        lab.expect(fields.one).to.equal(true);
+        lab.expect(fields.two).to.equal(false);
+        lab.expect(fields.three).to.equal(true);
+    });
+
+
     lab.test('it creates a sort document from a string', () => {
 
         const sort = MongoModels.sortAdapter('one -two three');
@@ -363,9 +394,24 @@ lab.experiment('Helpers', () => {
     });
 
 
+    lab.test('it passes a sort document through', () => {
+
+        const sort = MongoModels.sortAdapter({
+            one: 1,
+            two: -1,
+            three: 1
+        });
+
+        lab.expect(sort).to.be.an.object();
+        lab.expect(sort.one).to.equal(1);
+        lab.expect(sort.two).to.equal(-1);
+        lab.expect(sort.three).to.equal(1);
+    });
+
+
     lab.test('it returns the raw mongodb collection', () => {
 
-        class DummyModel extends MongoModels {};
+        class DummyModel extends MongoModels {}
 
         DummyModel.collectionName = 'dummies';
 
@@ -480,7 +526,7 @@ lab.experiment('Paged find', () => {
     });
 
 
-    lab.test('it returns paged results where begin item is less than total', async () => {
+    lab.test('it returns paged results where begin item is less than total (and no options argument)', async () => {
 
         const documents = [
             { name: 'Ren' },
@@ -493,11 +539,8 @@ lab.experiment('Paged find', () => {
         const filter = { 'role.special': { $exists: true } };
         const limit = 2;
         const page = 1;
-        const options = {
-            sort: { _id: -1 }
-        };
         const result = await DummyModel.pagedFind(
-            filter, limit, page, options
+            filter, limit, page
         );
 
         lab.expect(result).to.be.an.object();
@@ -754,7 +797,9 @@ lab.experiment('Proxy methods', () => {
         const testDocs = await DummyModel.insertOne(document);
         const id = testDocs[0]._id;
         const update = {
-            name: 'New Name'
+            $set: {
+                name: 'New Name'
+            }
         };
         const result = await DummyModel.findByIdAndUpdate(id, update);
 
@@ -770,7 +815,9 @@ lab.experiment('Proxy methods', () => {
         const testDocs = await DummyModel.insertOne(document);
         const id = testDocs[0]._id;
         const update = {
-            name: 'New Name'
+            $set: {
+                name: 'New Name'
+            }
         };
         const options = {
             returnOriginal: false
@@ -790,7 +837,7 @@ lab.experiment('Proxy methods', () => {
         await DummyModel.insertOne(document);
 
         const filter = { name: 'Ren' };
-        const update = { name: 'New Name' };
+        const update = { $set: { name: 'New Name' } };
         const result = await DummyModel.findOneAndUpdate(filter, update);
 
         lab.expect(result).to.be.an.instanceOf(DummyModel);
@@ -806,7 +853,7 @@ lab.experiment('Proxy methods', () => {
         await DummyModel.insertOne(document);
 
         const filter = { name: 'Ren' };
-        const update = { name: 'New Name' };
+        const update = { $set: { name: 'New Name' } };
         const options = { returnOriginal: true };
         const result = await DummyModel.findOneAndUpdate(filter, update, options);
 
